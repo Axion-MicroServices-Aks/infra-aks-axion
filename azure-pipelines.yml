@@ -1,0 +1,82 @@
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+- name: terraformWorkingDirectory
+  value: '$(System.DefaultWorkingDirectory)/Infra_aks'
+
+stages:
+- stage: Terraform
+  displayName: Terraform
+
+  jobs:
+  - job: Terraform
+    displayName: Terraform Init Plan Apply
+
+    steps:
+
+    - task: TerraformInstaller@1
+      displayName: Install Terraform
+      inputs:
+        terraformVersion: '1.16.2'
+
+    - script: |
+        which terraform
+        terraform version
+      displayName: Verify Terraform
+
+    # TEST THE WIF SERVICE CONNECTION
+    - task: AzureCLI@2
+      displayName: Test CICDADO WIF
+      inputs:
+        azureSubscription: 'CICDADO'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Testing Azure authentication..."
+          az account show
+
+          echo "Subscription ID:"
+          az account show --query id -o tsv
+
+          echo "Tenant ID:"
+          az account show --query tenantId -o tsv
+    
+    # 1. Initialize must connect to the backend storage account
+    - task: TerraformTaskV4@4
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(terraformWorkingDirectory)'
+        backendServiceArm: 'CICDADO'
+        backendAzureRmResourceGroupName: 'terraformBackend-rg'
+        backendAzureRmStorageAccountName: 'terraforms23tatplatform'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'aks.tfstate'
+      displayName: 'Terraform Init'
+    
+        # TEMPORARY - CHECK CURRENT STATE
+    - script: |
+        echo "===== Terraform State ====="
+        terraform state list || true
+        echo "==========================="
+      displayName: 'CHECK - Terraform State'
+      workingDirectory: '$(terraformWorkingDirectory)'
+
+#    2. Plan and Apply must use the target subscription connection
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(terraformWorkingDirectory)'
+        environmentServiceNameAzureRM: 'CICDADO'
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(terraformWorkingDirectory)'
+        environmentServiceNameAzureRM: 'CICDADO'
