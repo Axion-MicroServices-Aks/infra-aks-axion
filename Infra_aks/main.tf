@@ -1,4 +1,3 @@
-# this is running post rebuidling the state file. 
 
 # the code is to deploy aks single node cluster for lab purpose.
 
