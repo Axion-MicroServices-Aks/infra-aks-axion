@@ -1,3 +1,4 @@
+# to test if aks is working with ODIC
 name: AKS Terraform CI-CD
 
 # Workflow can start in two different situations. First, when a pull request is opened against main, and second, when code is actually pushed into main.
