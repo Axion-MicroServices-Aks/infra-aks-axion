@@ -17,3 +17,37 @@ Production Environment
 Approval
  ↓
 terraform apply
+-------------------------------------------------
+FEATURE BRANCH
+      │
+      ▼
+Open PR → main
+      │
+      ├── terraform fmt
+      ├── terraform validate
+      ├── Checkov
+      ├── Trivy
+      └── terraform plan
+              │
+              ▼
+         All PASS
+              │
+        Reviewer approves PR
+              │
+              ▼
+         Merge → main
+              │
+              ▼
+      Production job starts
+              │
+       GitHub Environment
+              │
+        Manual approval
+              │
+              ▼
+       terraform apply
+              │
+              ▼
+             Azure
+-----------------------------------------------
+
